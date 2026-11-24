@@ -1,0 +1,370 @@
+<meta name="claude:viewport-fit-sides" content="cover" />
+<title>LagGuard 裁判复核台</title>
+<style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-2: #f0f2f5;
+      --fg: #17202a;
+      --muted: #5d6b7a;
+      --line: #dce1e8;
+      --accent: #2456d6;
+      --accent-soft: #e8efff;
+      --ok: #137a3d;
+      --ok-soft: #e5f6ec;
+      --warn: #9a5b00;
+      --warn-soft: #fff2d8;
+      --bad: #b42318;
+      --bad-soft: #feeae7;
+      --hard: #7a27c9;
+      --hard-soft: #f2e8ff;
+      --shadow: 0 10px 30px rgba(16, 24, 40, .08);
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0e1218;
+        --panel: #171d26;
+        --panel-2: #202836;
+        --fg: #e8edf5;
+        --muted: #9aa8ba;
+        --line: #2c3746;
+        --accent: #8fb0ff;
+        --accent-soft: #1d2c50;
+        --ok: #62d58b;
+        --ok-soft: #123524;
+        --warn: #ffc45c;
+        --warn-soft: #3d2c08;
+        --bad: #ff8a7e;
+        --bad-soft: #451b17;
+        --hard: #cba2ff;
+        --hard-soft: #2e1748;
+        --shadow: 0 12px 34px rgba(0,0,0,.35);
+        color-scheme: dark;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding-top: 28px;
+      padding-bottom: 64px;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+    }
+    header { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; }
+    h1 { font-size: clamp(24px, 4vw, 34px); line-height: 1.15; margin: 0 0 6px; letter-spacing: -.02em; }
+    .sub { color: var(--muted); margin: 0; max-width: 760px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 18px; margin: 16px 0; }
+    .drop { border: 2px dashed var(--line); border-radius: 16px; padding: 28px; text-align: center; background: var(--panel); transition: .15s ease; }
+    .drop.drag { border-color: var(--accent); background: var(--accent-soft); }
+    input[type=file] { max-width: 100%; }
+    .hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+    .banner { display: flex; gap: 12px; align-items: flex-start; border-radius: 14px; padding: 14px 16px; margin: 14px 0; border: 1px solid var(--line); background: var(--panel); }
+    .banner.ok { background: var(--ok-soft); border-color: color-mix(in srgb, var(--ok) 35%, var(--line)); }
+    .banner.bad { background: var(--bad-soft); border-color: color-mix(in srgb, var(--bad) 35%, var(--line)); }
+    .banner.warn { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 35%, var(--line)); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 8px; background: currentColor; flex: 0 0 auto; }
+    .banner.ok { color: var(--ok); } .banner.bad { color: var(--bad); } .banner.warn { color: var(--warn); }
+    .banner strong { color: var(--fg); display: block; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .metric { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+    .metric .k { color: var(--muted); font-size: 12px; }
+    .metric .v { font-weight: 700; font-size: 18px; overflow-wrap: anywhere; }
+    .incident { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin: 16px 0; background: var(--panel); }
+    .incident-head { padding: 16px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+    .incident-title { font-weight: 800; font-size: 17px; word-break: break-all; }
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; border: 1px solid var(--line); background: var(--panel-2); white-space: nowrap; }
+    .badge.review { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+    .badge.hold, .badge.kick { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+    .badge.pass, .badge.observe { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+    .badge.hard { color: var(--hard); background: var(--hard-soft); border-color: transparent; }
+    .incident-body { padding: 16px; }
+    .score-row { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+    .score-box { border-radius: 12px; padding: 12px; background: var(--panel-2); border: 1px solid var(--line); }
+    .score { font-size: 28px; font-weight: 900; letter-spacing: -.03em; }
+    table { width: 100%; border-collapse: collapse; }
+    .signals { display: grid; gap: 10px; }
+    .signal { border: 1px solid var(--line); border-left-width: 4px; border-radius: 12px; padding: 12px; background: color-mix(in srgb, var(--panel) 80%, var(--panel-2)); }
+    .signal.normal { border-left-color: var(--accent); }
+    .signal.hard { border-left-color: var(--hard); background: color-mix(in srgb, var(--hard-soft) 45%, var(--panel)); }
+    .signal.exonerator { border-left-color: var(--ok); background: color-mix(in srgb, var(--ok-soft) 45%, var(--panel)); }
+    .signal-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--muted); word-break: break-all; }
+    .points { font-weight: 900; white-space: nowrap; }
+    .points.plus { color: var(--bad); } .points.minus { color: var(--ok); }
+    .detail { margin: 6px 0 8px; }
+    .data { width: 100%; font-size: 12px; border-radius: 8px; overflow: hidden; }
+    .data td { border-top: 1px solid var(--line); padding: 4px 8px; vertical-align: top; }
+    .data td:first-child { color: var(--muted); width: 45%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+    pre.raw { max-height: 420px; overflow: auto; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 12px; }
+    .muted { color: var(--muted); }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    button { border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 10px; padding: 8px 12px; font-weight: 700; cursor: pointer; }
+    button:hover { border-color: var(--accent); }
+    footer { color: var(--muted); font-size: 13px; margin-top: 24px; }
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .score-row, .two-col { grid-template-columns: 1fr; }
+      .drop { padding: 20px 14px; }
+    }
+  </style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>LagGuard 裁判复核台</h1>
+      <p class="sub">校验证据包哈希链与 Ed25519 签名，展示“异常信号 / 真实网络旁证 / 处置结论”。分数只是复核索引，不是自动处罚结论。</p>
+    </div>
+    <button id="themeToggle" type="button">切换主题</button>
+  </header>
+
+  <section class="drop" id="drop">
+    <div><strong>选择或拖入 ReviewBundle JSON</strong></div>
+    <div class="hint">例如 <code>examples/hold-release-review-bundle.json</code>。文件仅在本机浏览器解析，不会上传。</div>
+    <p><input id="file" type="file" accept="application/json,.json" /></p>
+    <p style="margin-bottom:0"><button id="loadSample" type="button">加载随附示例证据包</button></p>
+    <div id="loadState" class="hint">尚未加载证据包。</div>
+  </section>
+
+  <div id="verify"></div>
+  <section id="context" class="panel" hidden></section>
+  <section id="incidents"></section>
+  <section id="rawPanel" class="panel" hidden>
+    <h2 style="margin-top:0">原始 JSON</h2>
+    <pre class="raw" id="raw"></pre>
+  </section>
+
+  <footer>
+    浏览器校验用于方便阅卷；最终取证系统应固定签名公钥指纹，并结合服务端 tick 记录、对局录像、RTCP/传输遥测与客户端可信时间 attestation 综合判断。
+  </footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let bundle = null;
+
+$('file').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (file) await loadFile(file);
+});
+$('loadSample').addEventListener('click', async () => {
+  $('loadState').textContent = '正在加载随附示例…';
+  try {
+    const res = await fetch('hold-release-review-bundle.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    bundle = await res.json();
+    render();
+    $('loadState').textContent = '已加载随附示例证据包。';
+  } catch (err) {
+    $('verify').innerHTML = banner('warn', '无法自动加载示例', '如果是在本地直接打开 HTML，浏览器可能禁止 file:// fetch；请用文件选择器选择 examples/hold-release-review-bundle.json。');
+  }
+});
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+drop.addEventListener('drop', async (e) => {
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file) await loadFile(file);
+});
+$('themeToggle').addEventListener('click', () => {
+  const root = document.documentElement;
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const current = root.dataset.theme || (dark ? 'dark' : 'light');
+  root.dataset.theme = current === 'dark' ? 'light' : 'dark';
+});
+
+async function loadFile(file) {
+  $('loadState').textContent = `正在读取 ${file.name} …`;
+  try {
+    const text = await file.text();
+    bundle = JSON.parse(text);
+    render();
+    $('loadState').textContent = `已加载 ${file.name}`;
+  } catch (err) {
+    $('verify').innerHTML = banner('bad', '文件无法解析', String(err));
+  }
+}
+
+function banner(kind, title, text) {
+  return `<div class="banner ${kind}"><span class="dot"></span><div><strong>${escapeHTML(title)}</strong><div>${escapeHTML(text)}</div></div></div>`;
+}
+
+function escapeHTML(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtDur(ns) {
+  if (ns === undefined || ns === null) return '—';
+  const ms = ns / 1e6;
+  if (Math.abs(ms) >= 1000) return `${(ms/1000).toFixed(2)} s`;
+  return `${ms.toFixed(ms < 10 ? 2 : 0)} ms`;
+}
+function fmtTime(s) { return s ? new Date(s).toLocaleString() : '—'; }
+function actionClass(a) { return ['hold_competitive_input','temporary_suspension','kick'].includes(a) ? 'hold' : (a || 'pass'); }
+
+async function goCanonicalJSON(obj) {
+  let s = JSON.stringify(obj);
+  // encoding/json applies HTML and Unicode line-separator escaping by default.
+  s = s.replace(/[&<>]/g, ch => {
+    const code = ch.codePointAt(0).toString(16).padStart(4, '0');
+    return '\\u' + code;
+  });
+  s = s.split(String.fromCharCode(0x2028)).join('\\u2028')
+       .split(String.fromCharCode(0x2029)).join('\\u2029');
+  return new TextEncoder().encode(s);
+}
+
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function verifyBundle(b) {
+  if (!b || b.schema_version !== 'lagguard-evidence/v1') return {ok:false, msg:'不支持的 schema 或文件不是 LagGuard 证据包。'};
+  if (b.event_count !== (b.events || []).length) return {ok:false, msg:'event_count 与事件数量不一致。'};
+  let prev = '';
+  for (let i = 0; i < b.events.length; i++) {
+    const e = b.events[i];
+    if (e.sequence !== i + 1) return {ok:false, msg:`事件 ${i} 序列号不连续。`};
+    if (e.prev_hash !== prev) return {ok:false, msg:`事件 #${e.sequence} 的 prev_hash 不匹配。`};
+    const copy = JSON.parse(JSON.stringify(e));
+    copy.hash = '';
+    const payload = new Uint8Array([...new TextEncoder().encode(prev + '\n'), ...await goCanonicalJSON(copy)]);
+    const got = await sha256Hex(payload);
+    if (got !== e.hash) return {ok:false, msg:`事件 #${e.sequence} 哈希不匹配，证据可能被篡改。`};
+    prev = e.hash;
+  }
+  if (prev !== b.root_hash) return {ok:false, msg:'root_hash 与哈希链末端不一致。'};
+
+  let sigOk = false, sigSupported = false;
+  try {
+    const key = await crypto.subtle.importKey('raw', b64ToBytes(b.public_key), {name:'Ed25519'}, false, ['verify']);
+    sigSupported = true;
+    const toSign = {
+      schema_version: b.schema_version,
+      context: b.context,
+      event_count: b.event_count,
+      root_hash: b.root_hash,
+      public_key: b.public_key,
+      signer_fingerprint: b.signer_fingerprint,
+      signed_at: b.signed_at
+    };
+    sigOk = await crypto.subtle.verify('Ed25519', key, b64ToBytes(b.signature), await goCanonicalJSON(toSign));
+  } catch (err) {
+    return {ok:true, hashOk:true, sigOk:false, sigSupported:false, msg:'哈希链有效；当前浏览器不支持 Ed25519 校验，请使用 lagguard-verify CLI。'};
+  }
+  if (!sigOk) return {ok:false, hashOk:true, msg:'哈希链有效，但 Ed25519 签名无效。'};
+  const fpBytes = await crypto.subtle.digest('SHA-256', b64ToBytes(b.public_key));
+  const fp = [...new Uint8Array(fpBytes)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  if (fp !== b.signer_fingerprint) return {ok:false, msg:'公钥指纹不匹配。'};
+  return {ok:true, hashOk:true, sigOk:true, sigSupported, msg:'哈希链、公钥指纹和 Ed25519 签名均有效。请在裁判后台确认该签名指纹属于受信网关。'};
+}
+
+function renderContext(b) {
+  const c = b.context || {};
+  $('context').hidden = false;
+  $('context').innerHTML = `
+    <h2 style="margin:0 0 14px">对局与会话</h2>
+    <div class="grid">
+      ${metric('Session', c.session_id)}
+      ${metric('Match', c.match_id)}
+      ${metric('玩家假名', c.player_pseudonym)}
+      ${metric('游戏 / 流', `${c.game_id || '—'} / ${c.stream_id || '—'}`)}
+      ${metric('检测器版本', c.detector_version)}
+      ${metric('开始时间', fmtTime(c.started_at))}
+      ${metric('签名时间', fmtTime(b.signed_at))}
+      ${metric('事件数', b.event_count)}
+      ${metric('签名指纹', `<span title="${escapeHTML(b.signer_fingerprint)}">${escapeHTML((b.signer_fingerprint||'').slice(0,16))}…</span>`)}
+    </div>`;
+}
+function metric(k,v) { return `<div class="metric"><div class="k">${escapeHTML(k)}</div><div class="v">${v ?? '—'}</div></div>`; }
+
+function renderIncidents(b) {
+  const root = $('incidents');
+  const latest = new Map();
+  for (const e of b.events || []) if (e.incident) latest.set(e.incident.id, e.incident);
+  root.innerHTML = [...latest.values()].map(renderIncident).join('') || '<section class="panel">没有事件。</section>';
+}
+
+function renderIncident(inc) {
+  const d = inc.decision || {};
+  const signals = inc.signals || [];
+  return `<article class="incident">
+    <div class="incident-head">
+      <div>
+        <div class="incident-title">${escapeHTML(inc.id)}</div>
+        <div class="muted">${fmtTime(inc.started_at)} → ${fmtTime(inc.ended_at)} · 序列号 ${inc.first_seq ?? '?'}–${inc.last_seq ?? '?'} · ${inc.packet_count ?? 0} 包</div>
+      </div>
+      <div class="badges">
+        <span class="badge ${actionClass(d.primary)}">处置：${escapeHTML(d.primary || '—')}</span>
+        <span class="badge ${d.review_required ? 'review' : 'pass'}">${d.review_required ? '需复核' : '不处罚'}</span>
+        <span class="badge">弱网证据：${escapeHTML(d.network_evidence_level || 'none')}</span>
+        ${(signals.some(s=>s.hard)) ? '<span class="badge hard">硬证据</span>' : ''}
+        ${inc.complete ? '<span class="badge">已闭合</span>' : '<span class="badge review">中间版本</span>'}
+      </div>
+    </div>
+    <div class="incident-body">
+      <div class="score-row">
+        <div class="score-box"><div class="k muted">原始信号分</div><div class="score">${d.score ?? 0}</div></div>
+        <div class="score-box"><div class="k muted">网络消歧后</div><div class="score">${d.adjusted_score ?? 0}</div></div>
+        <div class="score-box"><div class="k muted">置信度</div><div class="score">${Math.round((d.confidence ?? 0)*100)}%</div></div>
+      </div>
+      <p><strong>策略说明：</strong>${escapeHTML(d.message || '')}</p>
+      <div class="two-col" style="margin-bottom:14px">
+        <div class="metric"><div class="k">上行空档</div><div class="v">${fmtDur(inc.arrival_gap)}</div></div>
+        <div class="metric"><div class="k">突发持续 / PPS</div><div class="v">${fmtDur(inc.burst_duration)} · ${Math.round(inc.arrivals_per_sec||0)}</div></div>
+        <div class="metric"><div class="k">时间戳跨度 / 压缩比</div><div class="v">${fmtDur(inc.stamp_span)} · ${(inc.span_ratio||0).toFixed(1)}×</div></div>
+        <div class="metric"><div class="k">缺失序列号 / 重复模式</div><div class="v">${inc.missing_seqs ?? 0} · 第 ${inc.repeated_count ?? 1} 次</div></div>
+        <div class="metric"><div class="k">对手画面间隔</div><div class="v">${fmtDur(inc.opponent_frame_gap)}</div></div>
+        <div class="metric"><div class="k">tick 间隔 / 回滚</div><div class="v">${fmtDur(inc.server_tick_gap)} · ${inc.rollback_events ?? 0}</div></div>
+      </div>
+      <h3>评分依据</h3>
+      <div class="signals">${signals.map(renderSignal).join('') || '<div class="muted">无信号</div>'}</div>
+    </div>
+  </article>`;
+}
+
+function renderSignal(s) {
+  const cls = s.exonerator ? 'exonerator' : (s.hard ? 'hard' : 'normal');
+  const pointClass = s.exonerator ? 'minus' : 'plus';
+  const point = s.exonerator ? `−${s.points}` : `+${s.points}`;
+  const data = Object.entries(s.data || {}).map(([k,v]) => `<tr><td>${escapeHTML(k)}</td><td>${escapeHTML(typeof v === 'number' ? (Math.round(v*1000)/1000) : v)}</td></tr>`).join('');
+  return `<div class="signal ${cls}">
+    <div class="signal-head"><div><strong>${escapeHTML(s.title)}</strong> <span class="code">${escapeHTML(s.code)}</span></div><div class="points ${pointClass}">${point}</div></div>
+    <div class="detail">${escapeHTML(s.detail)}</div>
+    ${data ? `<table class="data"><tbody>${data}</tbody></table>` : ''}
+  </div>`;
+}
+
+function renderRaw(b) {
+  $('rawPanel').hidden = false;
+  $('raw').textContent = JSON.stringify(b, null, 2);
+}
+
+async function render() {
+  renderContext(bundle);
+  renderIncidents(bundle);
+  renderRaw(bundle);
+  $('verify').innerHTML = banner('warn', '正在校验…', '正在计算 SHA-256 与 Ed25519 签名。');
+  const result = await verifyBundle(bundle);
+  if (result.ok && result.sigOk) $('verify').innerHTML = banner('ok', '证据完整且签名有效', result.msg);
+  else if (result.ok && result.hashOk && result.sigOk === false) $('verify').innerHTML = banner('warn', '哈希链有效，签名需 CLI 校验', result.msg);
+  else $('verify').innerHTML = banner('bad', '证据校验失败', result.msg);
+}
+</script>

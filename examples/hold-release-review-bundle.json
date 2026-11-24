@@ -1,0 +1,350 @@
+{
+  "schema_version": "lagguard-evidence/v1",
+  "context": {
+    "schema_version": "lagguard-evidence/v1",
+    "session_id": "demo-session-0001",
+    "match_id": "demo-match-7788",
+    "stream_id": "input-uplink-0",
+    "game_id": "demo-fighter",
+    "player_pseudonym": "player-pseud-42",
+    "detector_version": "lagguard-demo/v0.1.0",
+    "started_at": "2025-11-24T16:00:00Z",
+    "config": {
+      "ExpectedStampInterval": 16666666,
+      "StampTolerance": 2000000,
+      "GapThreshold": 116666662,
+      "BurstInterPacketGap": 33333332,
+      "BurstWindow": 250000000,
+      "MinBurstPackets": 8,
+      "MinBurstPPSFactor": 3,
+      "MinSpanRatio": 2.5,
+      "MinAccumulatedSpan": 96666662,
+      "StateChangesPerPacket": 1.2,
+      "RepeatWindow": 600000000000,
+      "ObserveScore": 30,
+      "ReviewScore": 48,
+      "HoldScore": 72,
+      "KickScore": 90,
+      "AutomaticKick": false,
+      "CellularScorePenalty": 6
+    }
+  },
+  "events": [
+    {
+      "schema_version": "lagguard-evidence/v1",
+      "sequence": 1,
+      "recorded_at": "2026-11-24T16:17:22.067882Z",
+      "incident": {
+        "id": "demo-session-0001-burst-1-400",
+        "session_id": "demo-session-0001",
+        "started_at": "2025-11-24T16:00:00.804Z",
+        "ended_at": "2025-11-24T16:00:00.818Z",
+        "complete": false,
+        "seq_before_gap": 24,
+        "first_seq": 25,
+        "last_seq": 32,
+        "min_seq": 25,
+        "max_seq": 32,
+        "packet_count": 8,
+        "missing_seqs": 0,
+        "out_of_order": false,
+        "arrival_gap": 420000000,
+        "burst_duration": 14000000,
+        "stamp_span": 112000000,
+        "span_ratio": 8,
+        "arrivals_per_sec": 500,
+        "baseline_pps": 62.5,
+        "burst_pps_factor": 8,
+        "samples": 8,
+        "state_changes": 16,
+        "action_events": 0,
+        "retransmissions": 0,
+        "fec_recovered": 0,
+        "opponent_frame_gap": 410000000,
+        "server_tick_gap": 420000000,
+        "rollback_events": 14,
+        "repeated_count": 1,
+        "signals": [
+          {
+            "code": "ARRIVAL_GAP_THEN_PACKET_BURST",
+            "title": "长静默后出现补偿性突发",
+            "detail": "网关先观测到超过阈值的上行空档，随后在极短时间内收到大量输入包。",
+            "points": 18,
+            "data": {
+              "burst_ms": 14,
+              "gap_ms": 420,
+              "packet_count": 8,
+              "pps": 500,
+              "pps_factor": 8,
+              "threshold_gap_ms": 116
+            },
+            "seqs": [
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32
+            ]
+          },
+          {
+            "code": "TIME_COMPRESSION_BURST",
+            "title": "输入时间跨度被突发到达时间压缩",
+            "detail": "客户端时间戳显示输入在空档期间持续产生，但网关到达间隔极短，符合“先积攒、后一次性放行”。",
+            "points": 30,
+            "data": {
+              "arrival_span_ms": 14,
+              "ratio": 8,
+              "stamp_span_ms": 112
+            },
+            "seqs": [
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32
+            ]
+          },
+          {
+            "code": "CONTIGUOUS_SEQUENCE_RELEASE",
+            "title": "空档前后序列号连续且整段放行",
+            "detail": "空档没有造成序列号缺口或重传/FEC恢复。家庭网络真实中断通常会留下缺口、重传或带宽恢复信号；但运营商缓冲也可能产生此现象，因此不能单独定性。",
+            "points": 9,
+            "data": {
+              "missing_seqs": 0
+            }
+          },
+          {
+            "code": "HIGH_ACTION_DENSITY_IN_BURST",
+            "title": "突发中操作密度异常高",
+            "detail": "短时间涌入大量控制变更或高意图操作事件，可能让服务器单个 tick 处理积攒指令。",
+            "points": 12,
+            "data": {
+              "action_events": 0,
+              "packets": 8,
+              "state_changes": 16
+            }
+          },
+          {
+            "code": "SELECTIVE_INPUT_GAP_WITH_LIVE_CHANNEL",
+            "title": "输入中断期间其他上行/探测通道仍存活",
+            "detail": "网关在同一空档收到伴流包或收到探测响应，说明接入网并未完全中断，输入链路可能被选择性延迟或在终端本地排队。",
+            "points": 24,
+            "data": {
+              "companion_packets": 2,
+              "probe_replies": 1,
+              "probes_sent": 2
+            }
+          },
+          {
+            "code": "OPPONENT_STALL_TEMPORALLY_CORRELATED",
+            "title": "对手画面/服务器 tick 卡顿与输入突发时间相关",
+            "detail": "对局总线或下游串流遥测显示：攻击者上行空档期间，对手下游帧间隔、服务器 tick 或回滚次数异常，并在输入突发到达后恢复。该跨玩家相关性比单流抖动更接近利用效果。",
+            "points": 18,
+            "data": {
+              "opponent_frame_gap_ms": 410,
+              "rollback_events": 14,
+              "server_tick_gap_ms": 420
+            }
+          }
+        ],
+        "decision": {
+          "primary": "hold_competitive_input",
+          "actions": [
+            "enhanced_capture",
+            "normalize_burst",
+            "flag_for_human_review",
+            "hold_competitive_input"
+          ],
+          "score": 100,
+          "adjusted_score": 100,
+          "confidence": 0.83,
+          "network_evidence_level": "none",
+          "reason_codes": [
+            "ARRIVAL_GAP_THEN_PACKET_BURST",
+            "TIME_COMPRESSION_BURST",
+            "CONTIGUOUS_SEQUENCE_RELEASE",
+            "HIGH_ACTION_DENSITY_IN_BURST",
+            "SELECTIVE_INPUT_GAP_WITH_LIVE_CHANNEL",
+            "OPPONENT_STALL_TEMPORALLY_CORRELATED"
+          ],
+          "review_required": true,
+          "automatic_kick_allowed": false,
+          "message": "高置信疑似操纵：可规范化后续突发输入并冻结排位结果，提交裁判复核；默认不直接踢出。"
+        }
+      },
+      "prev_hash": "",
+      "hash": "10fc0005aa44a13544b1704f94b13bd8d413898f80f9b0e9da909806f45c664d"
+    },
+    {
+      "schema_version": "lagguard-evidence/v1",
+      "sequence": 2,
+      "recorded_at": "2026-11-24T16:17:22.068681Z",
+      "incident": {
+        "id": "demo-session-0001-burst-1-400",
+        "session_id": "demo-session-0001",
+        "started_at": "2025-11-24T16:00:00.804Z",
+        "ended_at": "2025-11-24T16:00:00.834Z",
+        "complete": true,
+        "seq_before_gap": 24,
+        "first_seq": 25,
+        "last_seq": 40,
+        "min_seq": 25,
+        "max_seq": 40,
+        "packet_count": 16,
+        "missing_seqs": 0,
+        "out_of_order": false,
+        "arrival_gap": 420000000,
+        "burst_duration": 30000000,
+        "stamp_span": 240000000,
+        "span_ratio": 8,
+        "arrivals_per_sec": 500,
+        "baseline_pps": 62.5,
+        "burst_pps_factor": 8,
+        "samples": 16,
+        "state_changes": 32,
+        "action_events": 0,
+        "retransmissions": 0,
+        "fec_recovered": 0,
+        "opponent_frame_gap": 410000000,
+        "server_tick_gap": 420000000,
+        "rollback_events": 14,
+        "repeated_count": 1,
+        "signals": [
+          {
+            "code": "ARRIVAL_GAP_THEN_PACKET_BURST",
+            "title": "长静默后出现补偿性突发",
+            "detail": "网关先观测到超过阈值的上行空档，随后在极短时间内收到大量输入包。",
+            "points": 18,
+            "data": {
+              "burst_ms": 30,
+              "gap_ms": 420,
+              "packet_count": 16,
+              "pps": 500,
+              "pps_factor": 8,
+              "threshold_gap_ms": 116
+            },
+            "seqs": [
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              40
+            ]
+          },
+          {
+            "code": "TIME_COMPRESSION_BURST",
+            "title": "输入时间跨度被突发到达时间压缩",
+            "detail": "客户端时间戳显示输入在空档期间持续产生，但网关到达间隔极短，符合“先积攒、后一次性放行”。",
+            "points": 30,
+            "data": {
+              "arrival_span_ms": 30,
+              "ratio": 8,
+              "stamp_span_ms": 240
+            },
+            "seqs": [
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              40
+            ]
+          },
+          {
+            "code": "CONTIGUOUS_SEQUENCE_RELEASE",
+            "title": "空档前后序列号连续且整段放行",
+            "detail": "空档没有造成序列号缺口或重传/FEC恢复。家庭网络真实中断通常会留下缺口、重传或带宽恢复信号；但运营商缓冲也可能产生此现象，因此不能单独定性。",
+            "points": 9,
+            "data": {
+              "missing_seqs": 0
+            }
+          },
+          {
+            "code": "HIGH_ACTION_DENSITY_IN_BURST",
+            "title": "突发中操作密度异常高",
+            "detail": "短时间涌入大量控制变更或高意图操作事件，可能让服务器单个 tick 处理积攒指令。",
+            "points": 12,
+            "data": {
+              "action_events": 0,
+              "packets": 16,
+              "state_changes": 32
+            }
+          },
+          {
+            "code": "SELECTIVE_INPUT_GAP_WITH_LIVE_CHANNEL",
+            "title": "输入中断期间其他上行/探测通道仍存活",
+            "detail": "网关在同一空档收到伴流包或收到探测响应，说明接入网并未完全中断，输入链路可能被选择性延迟或在终端本地排队。",
+            "points": 24,
+            "data": {
+              "companion_packets": 2,
+              "probe_replies": 1,
+              "probes_sent": 2
+            }
+          },
+          {
+            "code": "OPPONENT_STALL_TEMPORALLY_CORRELATED",
+            "title": "对手画面/服务器 tick 卡顿与输入突发时间相关",
+            "detail": "对局总线或下游串流遥测显示：攻击者上行空档期间，对手下游帧间隔、服务器 tick 或回滚次数异常，并在输入突发到达后恢复。该跨玩家相关性比单流抖动更接近利用效果。",
+            "points": 18,
+            "data": {
+              "opponent_frame_gap_ms": 410,
+              "rollback_events": 14,
+              "server_tick_gap_ms": 420
+            }
+          }
+        ],
+        "decision": {
+          "primary": "hold_competitive_input",
+          "actions": [
+            "enhanced_capture",
+            "normalize_burst",
+            "flag_for_human_review",
+            "hold_competitive_input"
+          ],
+          "score": 100,
+          "adjusted_score": 100,
+          "confidence": 0.83,
+          "network_evidence_level": "none",
+          "reason_codes": [
+            "ARRIVAL_GAP_THEN_PACKET_BURST",
+            "TIME_COMPRESSION_BURST",
+            "CONTIGUOUS_SEQUENCE_RELEASE",
+            "HIGH_ACTION_DENSITY_IN_BURST",
+            "SELECTIVE_INPUT_GAP_WITH_LIVE_CHANNEL",
+            "OPPONENT_STALL_TEMPORALLY_CORRELATED"
+          ],
+          "review_required": true,
+          "automatic_kick_allowed": false,
+          "message": "高置信疑似操纵：可规范化后续突发输入并冻结排位结果，提交裁判复核；默认不直接踢出。"
+        }
+      },
+      "prev_hash": "10fc0005aa44a13544b1704f94b13bd8d413898f80f9b0e9da909806f45c664d",
+      "hash": "5bbcffe81f20fb03a3d4e081275d2a4b372116fa4f279fa7552e2a10873f16f4"
+    }
+  ],
+  "event_count": 2,
+  "root_hash": "5bbcffe81f20fb03a3d4e081275d2a4b372116fa4f279fa7552e2a10873f16f4",
+  "public_key": "zna8V0OjVDr2AnRetJ6g6hW1DIIOiJ/gKNbWCRPI2XI=",
+  "signer_fingerprint": "63460e06081d1975c979a997a7c1cd52e420d02e9818db8b2c8de3757ac42814",
+  "signature": "aL7UwOro1l61W7zGsmHTdPbiMKaLnEhTT9vg8+wqoxVMc9GB6z23ZeIkhscxFXNLOOb/fwyvtF6O3wZs3Uo2BA==",
+  "signed_at": "2025-11-24T16:02:00Z"
+}
